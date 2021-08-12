@@ -21,7 +21,7 @@ func NewMemberHandler(r *gin.RouterGroup, dm domain.MemberUsecase) {
 }
 
 func (m *memberHandler) CreateUser(c *gin.Context) {
-	params := domain.CreateUserParams{}
+	params := domain.User{}
 
 	bindErr := c.ShouldBind(&params)
 	if bindErr != nil {

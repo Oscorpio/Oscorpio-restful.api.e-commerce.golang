@@ -22,7 +22,12 @@ func NewMemberUsecase(dm domain.MemberRepo) domain.MemberUsecase {
 	}
 }
 
-func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.CreateUserParams) error {
+func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.User) error {
+	user, _ := m.memberRepo.GetUser(ctx, params.Email)
+	if user != nil {
+		return domain.ErrConflict
+	}
+
 	salt := getSalt()
 	np := []byte(params.Password + salt)
 	cost, convErr := strconv.Atoi(os.Getenv("HASH_COST"))
