@@ -8,6 +8,9 @@ import (
 
 func GetHttpStatus(err error) int {
 	switch err {
+	case domain.ErrForbidden:
+		return http.StatusForbidden
+
 	case domain.ErrInternalServer:
 		return http.StatusInternalServerError
 

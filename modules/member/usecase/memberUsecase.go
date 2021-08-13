@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"restful.api.e-commerce.golang/domain"
 )
@@ -29,18 +30,14 @@ func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.User) err
 	}
 
 	salt := getSalt()
-	np := []byte(params.Password + salt)
-	cost, convErr := strconv.Atoi(os.Getenv("HASH_COST"))
-	if convErr != nil {
-		log.Fatal("env HASH_COST must be integer")
-	}
+	np := params.Password + salt
 
-	hashedP, hashErr := bcrypt.GenerateFromPassword(np, cost)
+	hashedP, hashErr := hashByBcrypt(np)
 	if hashErr != nil {
 		return hashErr
 	}
 	params.Salt = salt
-	params.Password = string(hashedP)
+	params.Password = hashedP
 
 	err := m.memberRepo.CreateUser(ctx, params)
 	if err != nil {
@@ -48,6 +45,22 @@ func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.User) err
 	}
 
 	return nil
+}
+
+func (m *memberUsecase) Login(ctx context.Context, email, pwd string) (string, error) {
+	user, err := m.memberRepo.GetUser(ctx, email)
+	if err != nil {
+		return "", err
+	}
+
+	np := pwd + user.Salt
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(np))
+	if err != nil {
+		return "", domain.ErrForbidden
+	}
+
+	uuid := uuid.NewString()
+	return uuid, nil
 }
 
 func getSalt() string {
@@ -60,4 +73,18 @@ func getSalt() string {
 	}
 
 	return string(salts)
+}
+
+func hashByBcrypt(s string) (string, error) {
+	cost, convErr := strconv.Atoi(os.Getenv("HASH_COST"))
+	if convErr != nil {
+		log.Fatal("env HASH_COST must be integer")
+	}
+
+	hashedP, hashErr := bcrypt.GenerateFromPassword([]byte(s), cost)
+	if hashErr != nil {
+		return "", hashErr
+	}
+
+	return string(hashedP), nil
 }
