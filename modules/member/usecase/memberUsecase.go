@@ -70,6 +70,15 @@ func (m *memberUsecase) Login(ctx context.Context, email, pwd string) (string, e
 	return uuid, nil
 }
 
+func (m *memberUsecase) Logout(ctx context.Context, token string) error {
+	err := m.redisRepo.DeleteToken(ctx, token)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func getSalt() string {
 	salts := make([]byte, 7)
 	t := time.Now().UnixNano()

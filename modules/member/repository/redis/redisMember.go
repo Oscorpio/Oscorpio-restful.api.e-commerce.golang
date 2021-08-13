@@ -26,3 +26,12 @@ func (r *redisMemberRepo) StoreToken(ctx context.Context, token, email string) e
 
 	return nil
 }
+
+func (r *redisMemberRepo) DeleteToken(ctx context.Context, token string) error {
+	err := r.db.Del(ctx, token).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

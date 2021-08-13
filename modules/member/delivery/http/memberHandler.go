@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"restful.api.e-commerce.golang/domain"
@@ -19,6 +20,7 @@ func NewMemberHandler(r *gin.RouterGroup, dm domain.MemberUsecase) {
 
 	r.POST("/signUp", handler.CreateUser)
 	r.POST("/login", handler.Login)
+	r.POST("/logout", handler.Logout)
 }
 
 func (m *memberHandler) CreateUser(c *gin.Context) {
@@ -59,4 +61,25 @@ func (m *memberHandler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, token)
+}
+
+func (m *memberHandler) Logout(ctx *gin.Context) {
+	header := ctx.GetHeader("Authentication")
+	if len(header) <= 0 {
+		ctx.JSON(http.StatusForbidden, domain.ErrForbidden.Error())
+	}
+
+	token := strings.Split(header, "Bearer ")[1]
+	if len(token) <= 0 {
+		ctx.JSON(http.StatusUnprocessableEntity, domain.ErrParamInput.Error())
+		return
+	}
+
+	err := m.memberUsecase.Logout(ctx, token)
+	if err != nil {
+		ctx.JSON(utils.GetHttpStatus(err), err.Error())
+		return
+	}
+
+	ctx.JSON(http.StatusNoContent, "success")
 }

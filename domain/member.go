@@ -17,9 +17,11 @@ type MongoRepo interface {
 
 type RedisRepo interface {
 	StoreToken(ctx context.Context, token, email string) error
+	DeleteToken(ctx context.Context, token string) error
 }
 
 type MemberUsecase interface {
 	CreateUser(ctx context.Context, params *User) error
 	Login(ctx context.Context, email, password string) (string, error)
+	Logout(ctx context.Context, token string) error
 }
