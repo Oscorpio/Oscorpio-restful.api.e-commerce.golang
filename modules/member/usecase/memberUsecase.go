@@ -14,17 +14,19 @@ import (
 )
 
 type memberUsecase struct {
-	memberRepo domain.MemberRepo
+	mongoRepo domain.MongoRepo
+	redisRepo domain.RedisRepo
 }
 
-func NewMemberUsecase(dm domain.MemberRepo) domain.MemberUsecase {
+func NewMemberUsecase(dm domain.MongoRepo, dr domain.RedisRepo) domain.MemberUsecase {
 	return &memberUsecase{
-		memberRepo: dm,
+		mongoRepo: dm,
+		redisRepo: dr,
 	}
 }
 
 func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.User) error {
-	user, _ := m.memberRepo.GetUser(ctx, params.Email)
+	user, _ := m.mongoRepo.GetUser(ctx, params.Email)
 	if user != nil {
 		return domain.ErrConflict
 	}
@@ -39,7 +41,7 @@ func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.User) err
 	params.Salt = salt
 	params.Password = hashedP
 
-	err := m.memberRepo.CreateUser(ctx, params)
+	err := m.mongoRepo.CreateUser(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -48,7 +50,7 @@ func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.User) err
 }
 
 func (m *memberUsecase) Login(ctx context.Context, email, pwd string) (string, error) {
-	user, err := m.memberRepo.GetUser(ctx, email)
+	user, err := m.mongoRepo.GetUser(ctx, email)
 	if err != nil {
 		return "", err
 	}
@@ -60,6 +62,11 @@ func (m *memberUsecase) Login(ctx context.Context, email, pwd string) (string, e
 	}
 
 	uuid := uuid.NewString()
+	err = m.redisRepo.StoreToken(ctx, uuid, email)
+	if err != nil {
+		return "", err
+	}
+
 	return uuid, nil
 }
 

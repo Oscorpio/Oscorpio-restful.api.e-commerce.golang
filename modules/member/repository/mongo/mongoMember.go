@@ -13,7 +13,7 @@ type mongoMemberRepo struct {
 	db *mongo.Database
 }
 
-func NewMongoMemberRepo(db *mongo.Database) domain.MemberRepo {
+func NewMongoMemberRepo(db *mongo.Database) domain.MongoRepo {
 	return &mongoMemberRepo{
 		db,
 	}
