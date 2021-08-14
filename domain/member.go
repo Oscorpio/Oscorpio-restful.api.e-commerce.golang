@@ -2,7 +2,7 @@ package domain
 
 import "context"
 
-type CreateUserParams struct {
+type User struct {
 	UserName string `json:"username" bson:"username" binding:"required"`
 	Password string `json:"password" bson:"password" binding:"required,min=6,max=10"`
 	Salt     string `bson:"salt"`
@@ -10,10 +10,18 @@ type CreateUserParams struct {
 	Email    string `json:"email" bons:"email" binding:"required,email"`
 }
 
-type MemberRepo interface {
-	CreateUser(ctx context.Context, params *CreateUserParams) error
+type MongoRepo interface {
+	CreateUser(ctx context.Context, params *User) error
+	GetUser(ctx context.Context, email string) (*User, error)
+}
+
+type RedisRepo interface {
+	StoreToken(ctx context.Context, token, email string) error
+	DeleteToken(ctx context.Context, token string) error
 }
 
 type MemberUsecase interface {
-	CreateUser(ctx context.Context, params *CreateUserParams) error
+	CreateUser(ctx context.Context, params *User) error
+	Login(ctx context.Context, email, password string) (string, error)
+	Logout(ctx context.Context, token string) error
 }

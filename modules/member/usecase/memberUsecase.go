@@ -8,36 +8,70 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"restful.api.e-commerce.golang/domain"
 )
 
 type memberUsecase struct {
-	memberRepo domain.MemberRepo
+	mongoRepo domain.MongoRepo
+	redisRepo domain.RedisRepo
 }
 
-func NewMemberUsecase(dm domain.MemberRepo) domain.MemberUsecase {
+func NewMemberUsecase(dm domain.MongoRepo, dr domain.RedisRepo) domain.MemberUsecase {
 	return &memberUsecase{
-		memberRepo: dm,
+		mongoRepo: dm,
+		redisRepo: dr,
 	}
 }
 
-func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.CreateUserParams) error {
-	salt := getSalt()
-	np := []byte(params.Password + salt)
-	cost, convErr := strconv.Atoi(os.Getenv("HASH_COST"))
-	if convErr != nil {
-		log.Fatal("env HASH_COST must be integer")
+func (m *memberUsecase) CreateUser(ctx context.Context, params *domain.User) error {
+	user, _ := m.mongoRepo.GetUser(ctx, params.Email)
+	if user != nil {
+		return domain.ErrConflict
 	}
 
-	hashedP, hashErr := bcrypt.GenerateFromPassword(np, cost)
+	salt := getSalt()
+	np := params.Password + salt
+
+	hashedP, hashErr := hashByBcrypt(np)
 	if hashErr != nil {
 		return hashErr
 	}
 	params.Salt = salt
-	params.Password = string(hashedP)
+	params.Password = hashedP
 
-	err := m.memberRepo.CreateUser(ctx, params)
+	err := m.mongoRepo.CreateUser(ctx, params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *memberUsecase) Login(ctx context.Context, email, pwd string) (string, error) {
+	user, err := m.mongoRepo.GetUser(ctx, email)
+	if err != nil {
+		return "", err
+	}
+
+	np := pwd + user.Salt
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(np))
+	if err != nil {
+		return "", domain.ErrForbidden
+	}
+
+	uuid := uuid.NewString()
+	err = m.redisRepo.StoreToken(ctx, uuid, email)
+	if err != nil {
+		return "", err
+	}
+
+	return uuid, nil
+}
+
+func (m *memberUsecase) Logout(ctx context.Context, token string) error {
+	err := m.redisRepo.DeleteToken(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -55,4 +89,18 @@ func getSalt() string {
 	}
 
 	return string(salts)
+}
+
+func hashByBcrypt(s string) (string, error) {
+	cost, convErr := strconv.Atoi(os.Getenv("HASH_COST"))
+	if convErr != nil {
+		log.Fatal("env HASH_COST must be integer")
+	}
+
+	hashedP, hashErr := bcrypt.GenerateFromPassword([]byte(s), cost)
+	if hashErr != nil {
+		return "", hashErr
+	}
+
+	return string(hashedP), nil
 }

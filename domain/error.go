@@ -7,4 +7,5 @@ var (
 	ErrConflict       = errors.New("data has been exist")
 	ErrParamInput     = errors.New("param is not valid")
 	ErrInternalServer = errors.New("internal server error")
+	ErrForbidden      = errors.New("Forbidden error")
 )

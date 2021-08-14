@@ -4,18 +4,24 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"restful.api.e-commerce.golang/infra/database"
 	_memberHandlerHttp "restful.api.e-commerce.golang/modules/member/delivery/http"
-	_memberRepo "restful.api.e-commerce.golang/modules/member/repository/mongo"
+	_mongoMemberRepo "restful.api.e-commerce.golang/modules/member/repository/mongo"
+	_redisMemberRepo "restful.api.e-commerce.golang/modules/member/repository/redis"
 	_memberUsecase "restful.api.e-commerce.golang/modules/member/usecase"
 )
 
-var db *mongo.Database
+var (
+	mongoDB *mongo.Database
+	redisDB *redis.Client
+)
 
 func init() {
-	db = database.ConnectMongoDB()
+	mongoDB = database.ConnectMongoDB()
+	redisDB = database.ConnectRedis()
 }
 
 func Index(r *gin.RouterGroup) {
@@ -25,8 +31,9 @@ func Index(r *gin.RouterGroup) {
 		})
 	})
 
-	memberRepo := _memberRepo.NewMongoMemberRepo(db)
-	memberUsecase := _memberUsecase.NewMemberUsecase(memberRepo)
+	mongoMemberRepo := _mongoMemberRepo.NewMongoMemberRepo(mongoDB)
+	redisMemberRepo := _redisMemberRepo.NewRedisMemberRepo(redisDB)
+	memberUsecase := _memberUsecase.NewMemberUsecase(mongoMemberRepo, redisMemberRepo)
 	_memberHandlerHttp.NewMemberHandler(r, memberUsecase)
 
 }
