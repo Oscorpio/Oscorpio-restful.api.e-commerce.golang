@@ -1,12 +1,12 @@
 package main
 
 import (
+	"net/http"
 	"os"
-
-	routes "restful.api.e-commerce.golang/router"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
+	routes "restful.api.e-commerce.golang/router"
 )
 
 func init() {
@@ -24,6 +24,7 @@ func init() {
 
 func main() {
 	r := gin.Default()
+	r.StaticFS("i", http.Dir("image"))
 	routes.Index(r.Group("eCommerce"))
 	r.Run(":" + os.Getenv("PORT"))
 }
