@@ -84,8 +84,8 @@ func (p *productUsecase) ListProducts(ctx context.Context) ([]*domain.Product, e
 	return r, nil
 }
 
-func (p *productUsecase) StoreUnitStock(ctx context.Context, u *domain.UnitProduct) error {
-	err := p.mongoProductRepo.StoreUnitStock(ctx, u)
+func (p *productUsecase) StoreUnitProduct(ctx context.Context, u *domain.UnitProduct) error {
+	err := p.mongoProductRepo.StoreUnitProduct(ctx, u)
 	if err != nil {
 		return err
 	}

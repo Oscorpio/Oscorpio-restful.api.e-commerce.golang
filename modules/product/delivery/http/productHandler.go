@@ -97,7 +97,7 @@ func (p *productHandler) StoreUnitStock(ctx *gin.Context) {
 		return
 	}
 
-	err = p.productUsecase.StoreUnitStock(ctx, params)
+	err = p.productUsecase.StoreUnitProduct(ctx, params)
 	if err != nil {
 		ctx.JSON(utils.GetHttpStatus(err), gin.H{
 			"msg": err.Error(),

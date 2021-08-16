@@ -18,6 +18,10 @@ import (
 	_productHandlerHttp "restful.api.e-commerce.golang/modules/product/delivery/http"
 	_mongoProductRepo "restful.api.e-commerce.golang/modules/product/repository/mongo"
 	_productUsecase "restful.api.e-commerce.golang/modules/product/usecase"
+
+	_orderHandlerHttp "restful.api.e-commerce.golang/modules/order/delivery/http"
+	_mongoOrderRepo "restful.api.e-commerce.golang/modules/order/repository/mongo"
+	_orderUsecase "restful.api.e-commerce.golang/modules/order/usecase"
 )
 
 var (
@@ -45,5 +49,9 @@ func Index(r *gin.RouterGroup) {
 	mongoProductRepo := _mongoProductRepo.NewMongoProductRepo(mongoDB)
 	productUsecase := _productUsecase.NewProductUsecase(mongoProductRepo)
 	_productHandlerHttp.NewProductHandler(r.Group("product"), productUsecase)
+
+	mongoOrderRepo := _mongoOrderRepo.NewMongoOrderRepo(mongoDB)
+	orderUsecase := _orderUsecase.NewOrderUsecase(mongoOrderRepo, mongoProductRepo)
+	_orderHandlerHttp.NewOrderHandler(r.Group("order"), orderUsecase)
 
 }
