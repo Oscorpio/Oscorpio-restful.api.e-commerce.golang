@@ -32,16 +32,18 @@ type UnitProduct struct {
 type MongoProductRepo interface {
 	StoreProduct(ctx context.Context, params *Product) error
 	StoreImageInfo(ctx context.Context, image *Image) (string, error)
+	StoreUnitProduct(ctx context.Context, unitProduct *UnitProduct) error
 	ListProducts(ctx context.Context) ([]*Product, error)
 	ListProductById(ctx context.Context, id primitive.ObjectID) (*Product, error)
-	StoreUnitStock(ctx context.Context, unitProduct *UnitProduct) error
+	ListUnitProduct(ctx context.Context, params *UnitProduct) (*UnitProduct, error)
+	UpdateUnitProduct(ctx context.Context, params *UnitProduct) error
 }
 
 type ProductUsecase interface {
 	CreateProduct(ctx context.Context, params *Product) error
 	StoreImage(ctx context.Context, image *multipart.FileHeader, id primitive.ObjectID) (
 		string, error)
+	StoreUnitProduct(ctx context.Context, unitProduct *UnitProduct) error
 	ListProducts(ctx context.Context) ([]*Product, error)
 	ListProductById(ctx context.Context, id primitive.ObjectID) (*Product, error)
-	StoreUnitStock(ctx context.Context, unitProduct *UnitProduct) error
 }

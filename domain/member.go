@@ -10,12 +10,12 @@ type User struct {
 	Email    string `json:"email" bons:"email" binding:"required,email"`
 }
 
-type MongoRepo interface {
+type MongoMemberRepo interface {
 	CreateUser(ctx context.Context, params *User) error
 	GetUser(ctx context.Context, email string) (*User, error)
 }
 
-type RedisRepo interface {
+type RedisMemberRepo interface {
 	StoreToken(ctx context.Context, token, email string) error
 	DeleteToken(ctx context.Context, token string) error
 }

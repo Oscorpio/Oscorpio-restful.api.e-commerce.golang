@@ -12,7 +12,7 @@ type redisMemberRepo struct {
 	db *redis.Client
 }
 
-func NewRedisMemberRepo(db *redis.Client) domain.RedisRepo {
+func NewRedisMemberRepo(db *redis.Client) domain.RedisMemberRepo {
 	return &redisMemberRepo{
 		db,
 	}

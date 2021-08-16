@@ -88,7 +88,7 @@ func (m *mongoProductRepo) ListProducts(ctx context.Context) ([]*domain.Product,
 	return r, nil
 }
 
-func (m *mongoProductRepo) StoreUnitStock(ctx context.Context, u *domain.UnitProduct) error {
+func (m *mongoProductRepo) StoreUnitProduct(ctx context.Context, u *domain.UnitProduct) error {
 	coll := m.db.Collection("unitProduct")
 	_, err := coll.InsertOne(ctx, u)
 	if err != nil {
@@ -159,4 +159,46 @@ func (m *mongoProductRepo) ListProductById(ctx context.Context, id primitive.Obj
 
 	return r, nil
 
+}
+
+func (m *mongoProductRepo) ListUnitProduct(ctx context.Context, params *domain.UnitProduct) (
+	*domain.UnitProduct, error,
+) {
+	r := &domain.UnitProduct{}
+	coll := m.db.Collection("unitProduct")
+	filter := bson.M{
+		"productId": params.ProductId,
+		"size":      params.Size,
+		"color":     params.Color,
+	}
+
+	err := coll.FindOne(ctx, filter).Decode(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func (m *mongoProductRepo) UpdateUnitProduct(
+	ctx context.Context,
+	params *domain.UnitProduct) error {
+	coll := m.db.Collection("unitProduct")
+	filter := bson.M{
+		"productId": params.ProductId,
+		"size":      params.Size,
+		"color":     params.Color,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"stock": params.Stock,
+		},
+	}
+
+	_, err := coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

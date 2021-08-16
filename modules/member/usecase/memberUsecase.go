@@ -14,11 +14,14 @@ import (
 )
 
 type memberUsecase struct {
-	mongoRepo domain.MongoRepo
-	redisRepo domain.RedisRepo
+	mongoRepo domain.MongoMemberRepo
+	redisRepo domain.RedisMemberRepo
 }
 
-func NewMemberUsecase(dm domain.MongoRepo, dr domain.RedisRepo) domain.MemberUsecase {
+func NewMemberUsecase(
+	dm domain.MongoMemberRepo,
+	dr domain.RedisMemberRepo,
+) domain.MemberUsecase {
 	return &memberUsecase{
 		mongoRepo: dm,
 		redisRepo: dr,
