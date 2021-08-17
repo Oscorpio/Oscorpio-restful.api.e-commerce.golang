@@ -95,8 +95,8 @@ func getSalt() string {
 }
 
 func hashByBcrypt(s string) (string, error) {
-	cost, convErr := strconv.Atoi(os.Getenv("HASH_COST"))
-	if convErr != nil {
+	cost, err := strconv.Atoi(os.Getenv("HASH_COST"))
+	if err != nil {
 		log.Fatal("env HASH_COST must be integer")
 	}
 

@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,17 +19,25 @@ func NewProductHandler(r *gin.RouterGroup, dp domain.ProductUsecase) {
 		productUsecase: dp,
 	}
 
-	r.GET("/:productId", handler.ListProductById)
+	r.GET("/detail/:productId", handler.ListProductById)
 	r.GET("/", handler.ListProducts)
 	r.POST("/", handler.StoreProduct)
 	r.POST("/uploadImage", handler.UploadImage)
-	r.POST("/unit", handler.StoreUnitStock)
+	r.POST("/unit", handler.StoreDetail)
 }
 
 func (p *productHandler) UploadImage(ctx *gin.Context) {
 	image, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	fileNameSplit := strings.Split(image.Filename, ".")
+	fileType := fileNameSplit[len(fileNameSplit)-1]
+	if fileType != "png" && fileType != "jpg" && fileType != "jpeg" {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+			"msg": domain.ErrParamInput.Error(),
+		})
 		return
 	}
 
@@ -40,14 +49,14 @@ func (p *productHandler) UploadImage(ctx *gin.Context) {
 		})
 	}
 
-	r, err := p.productUsecase.StoreImage(ctx, image, oid)
+	err = p.productUsecase.StoreImage(ctx, image, oid)
 	if err != nil {
 		ctx.JSON(utils.GetHttpStatus(err), err.Error())
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"_id": r,
+		"msg": "success",
 	})
 }
 
@@ -87,8 +96,8 @@ func (p *productHandler) ListProducts(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, r)
 }
 
-func (p *productHandler) StoreUnitStock(ctx *gin.Context) {
-	params := &domain.UnitProduct{}
+func (p *productHandler) StoreDetail(ctx *gin.Context) {
+	params := &domain.Detail{}
 	err := ctx.ShouldBind(params)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
@@ -97,7 +106,7 @@ func (p *productHandler) StoreUnitStock(ctx *gin.Context) {
 		return
 	}
 
-	err = p.productUsecase.StoreUnitProduct(ctx, params)
+	err = p.productUsecase.StoreDetail(ctx, params)
 	if err != nil {
 		ctx.JSON(utils.GetHttpStatus(err), gin.H{
 			"msg": err.Error(),

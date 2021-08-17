@@ -7,14 +7,12 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	//XXX 驗證EMAIL resetPassword
 	"restful.api.e-commerce.golang/infra/database"
 	_memberHandlerHttp "restful.api.e-commerce.golang/modules/member/delivery/http"
 	_mongoMemberRepo "restful.api.e-commerce.golang/modules/member/repository/mongo"
 	_redisMemberRepo "restful.api.e-commerce.golang/modules/member/repository/redis"
 	_memberUsecase "restful.api.e-commerce.golang/modules/member/usecase"
 
-	//XXX upload多個圖片 檢查圖片副檔名
 	_productHandlerHttp "restful.api.e-commerce.golang/modules/product/delivery/http"
 	_mongoProductRepo "restful.api.e-commerce.golang/modules/product/repository/mongo"
 	_productUsecase "restful.api.e-commerce.golang/modules/product/usecase"

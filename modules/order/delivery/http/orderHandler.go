@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,15 +24,12 @@ func NewOrderHandler(r *gin.RouterGroup, do domain.OrderUsecase) {
 func (o *orderHandler) CreateOrder(ctx *gin.Context) {
 	order := &domain.Order{}
 	err := ctx.ShouldBind(order)
-	fmt.Println("====>")
 	if err != nil {
-		fmt.Println("====>", err)
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 			"msg": domain.ErrParamInput.Error(),
 		})
 		return
 	}
-	fmt.Println("====>")
 	err = o.orderUsecase.CreateOrder(ctx, order)
 	if err != nil {
 		ctx.JSON(utils.GetHttpStatus(err), gin.H{

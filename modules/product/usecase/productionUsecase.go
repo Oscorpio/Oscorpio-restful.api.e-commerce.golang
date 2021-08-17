@@ -27,10 +27,9 @@ func (p *productUsecase) StoreImage(
 	ctx context.Context,
 	image *multipart.FileHeader,
 	oid primitive.ObjectID,
-) (
-	string, error) {
+) error {
 	if _, err := os.Stat(os.Getenv("IMAGE_PATH") + image.Filename); err == nil {
-		return "", domain.ErrConflict
+		return domain.ErrConflict
 	}
 
 	dst := os.Getenv("IMAGE_PATH") + image.Filename
@@ -41,28 +40,28 @@ func (p *productUsecase) StoreImage(
 	)
 	f, err := image.Open()
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer f.Close()
 
 	out, err := os.Create(dst)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer out.Close()
 
 	_, err = io.Copy(out, f)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	r, err := p.mongoProductRepo.StoreImageInfo(ctx,
+	err = p.mongoProductRepo.StoreImageInfo(ctx,
 		&domain.Image{Name: image.Filename, URL: imageUrl, ProductId: oid})
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return r, nil
+	return nil
 }
 
 func (p *productUsecase) CreateProduct(ctx context.Context, dp *domain.Product) error {
@@ -84,8 +83,8 @@ func (p *productUsecase) ListProducts(ctx context.Context) ([]*domain.Product, e
 	return r, nil
 }
 
-func (p *productUsecase) StoreUnitProduct(ctx context.Context, u *domain.UnitProduct) error {
-	err := p.mongoProductRepo.StoreUnitProduct(ctx, u)
+func (p *productUsecase) StoreDetail(ctx context.Context, u *domain.Detail) error {
+	err := p.mongoProductRepo.StoreDetail(ctx, u)
 	if err != nil {
 		return err
 	}

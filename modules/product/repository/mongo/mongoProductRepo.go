@@ -19,15 +19,14 @@ func NewMongoProductRepo(db *mongo.Database) domain.MongoProductRepo {
 	}
 }
 
-func (m *mongoProductRepo) StoreImageInfo(ctx context.Context, image *domain.Image) (
-	string, error) {
+func (m *mongoProductRepo) StoreImageInfo(ctx context.Context, image *domain.Image) error {
 	coll := m.db.Collection("image")
-	ir, err := coll.InsertOne(ctx, image)
+	_, err := coll.InsertOne(ctx, image)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return ir.InsertedID.(primitive.ObjectID).Hex(), nil
+	return nil
 }
 
 func (m *mongoProductRepo) StoreProduct(ctx context.Context, dp *domain.Product) error {
@@ -88,8 +87,8 @@ func (m *mongoProductRepo) ListProducts(ctx context.Context) ([]*domain.Product,
 	return r, nil
 }
 
-func (m *mongoProductRepo) StoreUnitProduct(ctx context.Context, u *domain.UnitProduct) error {
-	coll := m.db.Collection("unitProduct")
+func (m *mongoProductRepo) StoreDetail(ctx context.Context, u *domain.Detail) error {
+	coll := m.db.Collection("detail")
 	_, err := coll.InsertOne(ctx, u)
 	if err != nil {
 		return err
@@ -116,7 +115,7 @@ func (m *mongoProductRepo) ListProductById(ctx context.Context, id primitive.Obj
 	}
 	lookupDetailStage := bson.D{
 		{"$lookup", bson.D{
-			{"from", "unitProduct"},
+			{"from", "detail"},
 			{"localField", "_id"},
 			{"foreignField", "productId"},
 			{"as", "detail"},
@@ -161,11 +160,11 @@ func (m *mongoProductRepo) ListProductById(ctx context.Context, id primitive.Obj
 
 }
 
-func (m *mongoProductRepo) ListUnitProduct(ctx context.Context, params *domain.UnitProduct) (
-	*domain.UnitProduct, error,
+func (m *mongoProductRepo) ListDetail(ctx context.Context, params *domain.Detail) (
+	*domain.Detail, error,
 ) {
-	r := &domain.UnitProduct{}
-	coll := m.db.Collection("unitProduct")
+	r := &domain.Detail{}
+	coll := m.db.Collection("detail")
 	filter := bson.M{
 		"productId": params.ProductId,
 		"size":      params.Size,
@@ -180,10 +179,10 @@ func (m *mongoProductRepo) ListUnitProduct(ctx context.Context, params *domain.U
 	return r, nil
 }
 
-func (m *mongoProductRepo) UpdateUnitProduct(
+func (m *mongoProductRepo) UpdateDetail(
 	ctx context.Context,
-	params *domain.UnitProduct) error {
-	coll := m.db.Collection("unitProduct")
+	params *domain.Detail) error {
+	coll := m.db.Collection("detail")
 	filter := bson.M{
 		"productId": params.ProductId,
 		"size":      params.Size,

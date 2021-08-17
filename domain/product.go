@@ -12,7 +12,7 @@ type Product struct {
 	Name   string              `json:"name" bson:"name" binding:"required"`
 	Image  *Image              `json:"image,omitempty" bson:"image,omitempty"`
 	Price  int                 `json:"price" bson:"price" binding:"required"`
-	Detail []*UnitProduct      `json:"detail,omitempty" bson:"detail,omitempty"`
+	Detail []*Detail           `json:"detail,omitempty" bson:"detail,omitempty"`
 }
 
 type Image struct {
@@ -22,7 +22,7 @@ type Image struct {
 	URL       string             `json:"url,omitempty" bson:"url,omitempty" binding:"required"`
 }
 
-type UnitProduct struct {
+type Detail struct {
 	ProductId *primitive.ObjectID `json:"productId" bson:"productId" binding:"required"`
 	Color     string              `json:"color" bson:"color" binding:"required"`
 	Size      string              `json:"size" bson:"size" binding:"required"`
@@ -31,19 +31,18 @@ type UnitProduct struct {
 
 type MongoProductRepo interface {
 	StoreProduct(ctx context.Context, params *Product) error
-	StoreImageInfo(ctx context.Context, image *Image) (string, error)
-	StoreUnitProduct(ctx context.Context, unitProduct *UnitProduct) error
+	StoreImageInfo(ctx context.Context, image *Image) error
+	StoreDetail(ctx context.Context, Detail *Detail) error
 	ListProducts(ctx context.Context) ([]*Product, error)
 	ListProductById(ctx context.Context, id primitive.ObjectID) (*Product, error)
-	ListUnitProduct(ctx context.Context, params *UnitProduct) (*UnitProduct, error)
-	UpdateUnitProduct(ctx context.Context, params *UnitProduct) error
+	ListDetail(ctx context.Context, params *Detail) (*Detail, error)
+	UpdateDetail(ctx context.Context, params *Detail) error
 }
 
 type ProductUsecase interface {
 	CreateProduct(ctx context.Context, params *Product) error
-	StoreImage(ctx context.Context, image *multipart.FileHeader, id primitive.ObjectID) (
-		string, error)
-	StoreUnitProduct(ctx context.Context, unitProduct *UnitProduct) error
+	StoreImage(ctx context.Context, image *multipart.FileHeader, id primitive.ObjectID) error
+	StoreDetail(ctx context.Context, detail *Detail) error
 	ListProducts(ctx context.Context) ([]*Product, error)
 	ListProductById(ctx context.Context, id primitive.ObjectID) (*Product, error)
 }

@@ -28,35 +28,45 @@ func (m *memberHandler) CreateUser(c *gin.Context) {
 
 	bindErr := c.ShouldBind(&params)
 	if bindErr != nil {
-		c.JSON(http.StatusUnprocessableEntity, bindErr.Error())
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"msg": domain.ErrParamInput.Error(),
+		})
 		return
 	}
 
 	err := m.memberUsecase.CreateUser(c, &params)
 	if err != nil {
-		c.JSON(utils.GetHttpStatus(err), err.Error())
+		c.JSON(utils.GetHttpStatus(err), gin.H{
+			"msg": err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusCreated, "success")
+	c.JSON(http.StatusCreated, gin.H{
+		"msg": "success",
+	})
 }
 
 func (m *memberHandler) Login(c *gin.Context) {
 	type v struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
+		Email    string `json:"email" bson:"email" binding:"required,email"`
+		Password string `json:"password" bson:"password" binding:"required"`
 	}
-	params := v{}
+	params := &v{}
 
 	bindErr := c.ShouldBind(&params)
 	if bindErr != nil {
-		c.JSON(http.StatusUnprocessableEntity, bindErr.Error())
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"msg": domain.ErrParamInput.Error(),
+		})
 		return
 	}
 
 	token, err := m.memberUsecase.Login(c, params.Email, params.Password)
 	if err != nil {
-		c.JSON(utils.GetHttpStatus(err), err.Error())
+		c.JSON(utils.GetHttpStatus(err), gin.H{
+			"msg": err.Error(),
+		})
 		return
 	}
 
@@ -71,15 +81,21 @@ func (m *memberHandler) Logout(ctx *gin.Context) {
 
 	token := strings.Split(header, "Bearer ")[1]
 	if len(token) <= 0 {
-		ctx.JSON(http.StatusUnprocessableEntity, domain.ErrParamInput.Error())
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+			"msg": domain.ErrParamInput.Error(),
+		})
 		return
 	}
 
 	err := m.memberUsecase.Logout(ctx, token)
 	if err != nil {
-		ctx.JSON(utils.GetHttpStatus(err), err.Error())
+		ctx.JSON(utils.GetHttpStatus(err), gin.H{
+			"msg": err.Error(),
+		})
 		return
 	}
 
-	ctx.JSON(http.StatusNoContent, "success")
+	ctx.JSON(http.StatusNoContent, gin.H{
+		"msg": "success",
+	})
 }
