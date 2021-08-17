@@ -25,7 +25,7 @@ func NewProductHandler(r *gin.RouterGroup, dp domain.ProductUsecase, da domain.A
 	r.GET("/", handler.ListProducts)
 	r.POST("/", handler.StoreProduct)
 	r.POST("/uploadImage", handler.UploadImage)
-	r.POST("/unit", handler.StoreDetail)
+	r.POST("/detail", handler.StoreDetail)
 }
 
 func (p *productHandler) UploadImage(ctx *gin.Context) {
