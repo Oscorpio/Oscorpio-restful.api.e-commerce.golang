@@ -34,8 +34,8 @@ func (m *mongoMemberRepo) GetUser(ctx context.Context, email string) (*domain.Us
 	user := &domain.User{}
 	coll := m.db.Collection("member")
 	filter := bson.M{"email": email}
-	err := coll.FindOne(ctx, filter).Decode(user)
 
+	err := coll.FindOne(ctx, filter).Decode(user)
 	if err != nil {
 		return nil, domain.ErrNotFound
 	}

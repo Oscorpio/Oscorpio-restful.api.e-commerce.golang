@@ -26,32 +26,24 @@ func (o *orderUsecase) CreateOrder(ctx context.Context, order *domain.Order) err
 	l := len(order.Item)
 
 	for i := 0; i < l; i++ {
-		p, err := o.mongoProductRepo.ListProductById(ctx, order.Item[i].ProductId)
+		item := order.Item[i]
+
+		item, price, err := getProduct(o, ctx, item)
 		if err != nil {
 			return err
 		}
-		order.Item[i].Name = p.Name
-		order.Item[i].Price = p.Price
+		total += price
 
-		up, err := o.mongoProductRepo.ListUnitProduct(
-			ctx,
-			&domain.UnitProduct{
-				ProductId: &order.Item[i].ProductId,
-				Size:      order.Item[i].Size,
-				Color:     order.Item[i].Color,
-			},
-		)
+		up, err := getProductDetail(o, ctx, item)
 		if err != nil {
 			return err
 		}
-
-		total += p.Price * order.Item[i].Quantity
-
-		if order.Item[i].Quantity > up.Stock {
+		if item.Quantity > up.Stock {
 			return domain.ErrParamInput
 		}
-		up.Stock -= order.Item[i].Quantity
-		err = o.mongoProductRepo.UpdateUnitProduct(ctx, up)
+
+		up.Stock -= item.Quantity
+		err = updateStock(o, ctx, up)
 		if err != nil {
 			return err
 		}
@@ -75,4 +67,45 @@ func (o *orderUsecase) ListOrder(ctx context.Context, order string) (
 	}
 
 	return r, nil
+}
+
+func getProduct(o *orderUsecase, ctx context.Context, item *domain.Item) (
+	*domain.Item, int, error,
+) {
+	p, err := o.mongoProductRepo.ListProductById(ctx, item.ProductId)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	item.Name = p.Name
+	item.Price = p.Price
+
+	return item, p.Price * item.Quantity, nil
+}
+
+func getProductDetail(o *orderUsecase, ctx context.Context, item *domain.Item) (
+	*domain.Detail, error,
+) {
+	up, err := o.mongoProductRepo.ListDetail(
+		ctx,
+		&domain.Detail{
+			ProductId: &item.ProductId,
+			Size:      item.Size,
+			Color:     item.Color,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return up, nil
+}
+
+func updateStock(o *orderUsecase, ctx context.Context, up *domain.Detail) error {
+	err := o.mongoProductRepo.UpdateDetail(ctx, up)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
