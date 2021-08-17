@@ -20,6 +20,9 @@ import (
 	_orderHandlerHttp "restful.api.e-commerce.golang/modules/order/delivery/http"
 	_mongoOrderRepo "restful.api.e-commerce.golang/modules/order/repository/mongo"
 	_orderUsecase "restful.api.e-commerce.golang/modules/order/usecase"
+
+	_redisAuthRepo "restful.api.e-commerce.golang/modules/auth/repository/redis"
+	_authUsecase "restful.api.e-commerce.golang/modules/auth/usecase"
 )
 
 var (
@@ -39,6 +42,9 @@ func Index(r *gin.RouterGroup) {
 		})
 	})
 
+	redisAuthRepo := _redisAuthRepo.NewRedisAuthRepo(redisDB)
+	authUsecase := _authUsecase.NewAuthUsecase(redisAuthRepo)
+
 	mongoMemberRepo := _mongoMemberRepo.NewMongoMemberRepo(mongoDB)
 	redisMemberRepo := _redisMemberRepo.NewRedisMemberRepo(redisDB)
 	memberUsecase := _memberUsecase.NewMemberUsecase(mongoMemberRepo, redisMemberRepo)
@@ -46,10 +52,10 @@ func Index(r *gin.RouterGroup) {
 
 	mongoProductRepo := _mongoProductRepo.NewMongoProductRepo(mongoDB)
 	productUsecase := _productUsecase.NewProductUsecase(mongoProductRepo)
-	_productHandlerHttp.NewProductHandler(r.Group("product"), productUsecase)
+	_productHandlerHttp.NewProductHandler(r.Group("product"), productUsecase, authUsecase)
 
 	mongoOrderRepo := _mongoOrderRepo.NewMongoOrderRepo(mongoDB)
 	orderUsecase := _orderUsecase.NewOrderUsecase(mongoOrderRepo, mongoProductRepo)
-	_orderHandlerHttp.NewOrderHandler(r.Group("order"), orderUsecase)
+	_orderHandlerHttp.NewOrderHandler(r.Group("order"), orderUsecase, authUsecase)
 
 }

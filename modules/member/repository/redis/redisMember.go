@@ -19,7 +19,7 @@ func NewRedisMemberRepo(db *redis.Client) domain.RedisMemberRepo {
 }
 
 func (r *redisMemberRepo) StoreToken(ctx context.Context, token, email string) error {
-	err := r.db.SetEX(ctx, token, email, 60*time.Second).Err()
+	err := r.db.SetEX(ctx, token, email, 300*time.Second).Err()
 	if err != nil {
 		return err
 	}

@@ -12,11 +12,13 @@ import (
 
 type productHandler struct {
 	productUsecase domain.ProductUsecase
+	authUsecase    domain.AuthUsecase
 }
 
-func NewProductHandler(r *gin.RouterGroup, dp domain.ProductUsecase) {
+func NewProductHandler(r *gin.RouterGroup, dp domain.ProductUsecase, da domain.AuthUsecase) {
 	handler := &productHandler{
 		productUsecase: dp,
+		authUsecase:    da,
 	}
 
 	r.GET("/detail/:productId", handler.ListProductById)
@@ -27,6 +29,13 @@ func NewProductHandler(r *gin.RouterGroup, dp domain.ProductUsecase) {
 }
 
 func (p *productHandler) UploadImage(ctx *gin.Context) {
+	err := p.authUsecase.ValidateToken(ctx, ctx.GetHeader("Authentication"))
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"msg": domain.ErrForbidden.Error(),
+		})
+		return
+	}
 	image, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
@@ -61,9 +70,17 @@ func (p *productHandler) UploadImage(ctx *gin.Context) {
 }
 
 func (p *productHandler) StoreProduct(ctx *gin.Context) {
+	err := p.authUsecase.ValidateToken(ctx, ctx.GetHeader("Authentication"))
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"msg": domain.ErrForbidden.Error(),
+		})
+		return
+	}
+
 	params := &domain.Product{}
 
-	err := ctx.ShouldBind(params)
+	err = ctx.ShouldBind(params)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 			"msg": domain.ErrParamInput.Error(),
@@ -97,8 +114,16 @@ func (p *productHandler) ListProducts(ctx *gin.Context) {
 }
 
 func (p *productHandler) StoreDetail(ctx *gin.Context) {
+	err := p.authUsecase.ValidateToken(ctx, ctx.GetHeader("Authentication"))
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"msg": domain.ErrForbidden.Error(),
+		})
+		return
+	}
+
 	params := &domain.Detail{}
-	err := ctx.ShouldBind(params)
+	err = ctx.ShouldBind(params)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 			"msg": domain.ErrParamInput.Error(),
