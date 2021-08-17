@@ -10,11 +10,13 @@ import (
 
 type orderHandler struct {
 	orderUsecase domain.OrderUsecase
+	authUsecase  domain.AuthUsecase
 }
 
-func NewOrderHandler(r *gin.RouterGroup, do domain.OrderUsecase) {
+func NewOrderHandler(r *gin.RouterGroup, do domain.OrderUsecase, da domain.AuthUsecase) {
 	handler := &orderHandler{
 		orderUsecase: do,
+		authUsecase:  da,
 	}
 
 	r.POST("/", handler.CreateOrder)
@@ -22,8 +24,16 @@ func NewOrderHandler(r *gin.RouterGroup, do domain.OrderUsecase) {
 }
 
 func (o *orderHandler) CreateOrder(ctx *gin.Context) {
+	err := o.authUsecase.ValidateToken(ctx, ctx.GetHeader("Authentication"))
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"msg": domain.ErrForbidden.Error(),
+		})
+		return
+	}
+
 	order := &domain.Order{}
-	err := ctx.ShouldBind(order)
+	err = ctx.ShouldBind(order)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 			"msg": domain.ErrParamInput.Error(),
@@ -44,6 +54,14 @@ func (o *orderHandler) CreateOrder(ctx *gin.Context) {
 }
 
 func (o *orderHandler) ListOrder(ctx *gin.Context) {
+	err := o.authUsecase.ValidateToken(ctx, ctx.GetHeader("Authentication"))
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"msg": domain.ErrForbidden.Error(),
+		})
+		return
+	}
+
 	param := ctx.Param("owner")
 	if param == "" {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{
